@@ -184,6 +184,7 @@
 
     <button class="cta" id="startBtn">Empezar workout de hoy</button>
     <button class="cta secondary" id="restBtn" style="display:none;">Marcar día de descanso</button>
+    <button id="resetDataBtn" style="display:block; width:100%; text-align:center; background:none; border:none; color:var(--text-3); font-size:12px; padding:14px 0 4px; cursor:pointer;">Reiniciar datos</button>
   </main>
 </div>
 
@@ -829,6 +830,13 @@ document.getElementById("startBtn").addEventListener("click", ()=>{
 });
 document.getElementById("restBtn").addEventListener("click", ()=>{
   showToast("Hoy es día de descanso 💤");
+});
+document.getElementById("resetDataBtn").addEventListener("click", ()=>{
+  const ok = confirm("¿Borrar todos los datos guardados? Esta acción no se puede deshacer.");
+  if(ok){
+    localStorage.removeItem(STORE_KEY);
+    location.reload();
+  }
 });
 document.getElementById("backBtn").addEventListener("click", returnFromSession);
 document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
