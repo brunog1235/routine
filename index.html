@@ -270,8 +270,17 @@ const WORKOUTS = {
   ]
 };
 
-// day 1-7 cycle -> 'A' | 'B' | 'rest'
-const CYCLE = ["A","B","rest","rest","A","B","rest"];
+// horario fijo por día de la semana (0=domingo, 1=lunes, ... 6=sábado)
+const WEEKDAY_SCHEDULE = {
+  0: "rest",  // domingo
+  1: "A",     // lunes
+  2: "B",     // martes
+  3: "rest",  // miércoles
+  4: "A",     // jueves
+  5: "B",     // viernes
+  6: "rest"   // sábado
+};
+const WEEKDAY_FULL = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 
 const QUOTES = [
   "Cada serie de hoy es peso que no vas a tener que levantar mañana.",
@@ -386,7 +395,7 @@ function saveData(data){
 
 let DATA = loadData();
 
-/* ================= CYCLE / DATE HELPERS ================= */
+/* ================= WEEKDAY SCHEDULE / DATE HELPERS ================= */
 function daysBetween(d1, d2){
   const a = new Date(d1 + "T00:00:00");
   const b = new Date(d2 + "T00:00:00");
@@ -395,12 +404,11 @@ function daysBetween(d1, d2){
 function todayStr(){
   return toLocalDateStr(new Date());
 }
-function cycleDayIndex(dateStr){
-  const diff = daysBetween(DATA.startDate, dateStr);
-  return ((diff % 7) + 7) % 7; // 0-6
+function weekdayOf(dateStr){
+  return new Date(dateStr + "T00:00:00").getDay(); // 0-6
 }
 function workoutForDate(dateStr){
-  return CYCLE[cycleDayIndex(dateStr)];
+  return WEEKDAY_SCHEDULE[weekdayOf(dateStr)];
 }
 
 /* ================= STREAK ================= */
@@ -619,15 +627,14 @@ function getSessionForDate(dateStr, type){
 
 function renderDayView(){
   const dateStr = dayViewDate;
-  const idx = cycleDayIndex(dateStr);
-  const type = CYCLE[idx];
+  const type = workoutForDate(dateStr);
   const today = todayStr();
   const isToday = dateStr === today;
   const isFuture = dateStr > today;
 
   document.getElementById("day-date-label").innerHTML =
     formatDateLabel(dateStr) + (isToday ? ' <span class="today-tag">· Hoy</span>' : '');
-  document.getElementById("day-cycle-badge").textContent = "Día " + (idx+1) + " del ciclo";
+  document.getElementById("day-cycle-badge").textContent = WEEKDAY_FULL[weekdayOf(dateStr)];
 
   const content = document.getElementById("day-content");
   content.innerHTML = "";
@@ -700,11 +707,10 @@ function openSession(type, dateStr, returnTo){
 
   showView("session");
   document.getElementById("session-title").textContent = "Workout " + type;
-  const idx = cycleDayIndex(currentSessionDate);
   const isToday = currentSessionDate === todayStr();
   document.getElementById("session-date-label").innerHTML =
     formatDateLabel(currentSessionDate) + (isToday ? ' <span style="color:var(--accent)">· Hoy</span>' : "");
-  document.getElementById("session-day-badge").textContent = "Día " + (idx+1) + " del ciclo";
+  document.getElementById("session-day-badge").textContent = WEEKDAY_FULL[weekdayOf(currentSessionDate)];
   document.getElementById("sessionNextBtn").style.opacity = isToday ? "0.35" : "1";
   document.getElementById("sessionNextBtn").style.pointerEvents = isToday ? "none" : "auto";
 
