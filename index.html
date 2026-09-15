@@ -134,6 +134,7 @@
     padding:44px 20px; text-align:center; color:var(--text-2);
   }
   .rest-icon{font-size:30px; margin-bottom:10px;}
+  .rest-manual-note{font-size:13px; color:var(--text-2); text-align:center; margin:16px 0 0;}
   .day-workout-title{font-size:16px; font-weight:700; margin-bottom:10px;}
   .day-ex-row{
     background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
@@ -142,6 +143,16 @@
   .day-ex-name{font-size:14px; font-weight:600;}
   .day-ex-sets{font-size:12px; color:var(--text-2); margin-top:2px;}
   .day-ex-sets.logged{color:var(--success); font-weight:600;}
+  .day-ex-sets.skipped{color:var(--text-3); font-style:italic;}
+
+  .ex-card-header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .skip-toggle{
+    display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-2);
+    white-space:nowrap; cursor:pointer; padding-top:2px;
+  }
+  .skip-toggle input{width:15px; height:15px; accent-color:var(--accent);}
+  .ex-card.skipped{opacity:0.55;}
+  .ex-card.skipped .ex-title{text-decoration:line-through;}
 
   .session-day-nav{
     display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;
@@ -256,6 +267,19 @@ const WORKOUTS = {
     { name: "Romanian deadlift", sets: 3, reps: "8-15" },
     { name: "Calf raise", sets: 3, reps: "15-25" }
   ],
+  // Variante del jueves: mismo Workout A, sin calf raise (para no acumular tanto volumen de pierna
+  // con las corridas de miércoles y sábado).
+  A2: [
+    { name: "Bench press / Floor press / Weighted pushups", sets: 3, reps: "8-15" },
+    { name: "Pullover", sets: 3, reps: "8-15" },
+    { name: "Overhead press", sets: 3, reps: "8-15" },
+    { name: "Biceps curl", sets: 3, reps: "12-20" },
+    { name: "Skullcrusher / Any overhead extension", sets: 3, reps: "15-20" },
+    { name: "Rear delt fly", sets: 3, reps: "15-20" },
+    { name: "Lateral raise", sets: 3, reps: "15-20" },
+    { name: "Front squat", sets: 3, reps: "8-15" },
+    { name: "Romanian deadlift", sets: 3, reps: "8-15" }
+  ],
   B: [
     { name: "Overhead press", sets: 3, reps: "8-15" },
     { name: "Dumbbell row", sets: 3, reps: "8-15" },
@@ -263,24 +287,25 @@ const WORKOUTS = {
     { name: "Hammer curl", sets: 3, reps: "12-20" },
     { name: "Triceps kickback", sets: 3, reps: "15-20" },
     { name: "Rear delt fly", sets: 3, reps: "15-20" },
-    { name: "Lateral raise", sets: 3, reps: "15-20" },
-    { name: "Lunges", sets: 3, reps: "12-15" },
-    { name: "Front squat", sets: 3, reps: "8-12" },
-    { name: "Calf raise", sets: 3, reps: "15-25" }
+    { name: "Lateral raise", sets: 3, reps: "15-20" }
   ]
 };
 
 // horario fijo por día de la semana (0=domingo, 1=lunes, ... 6=sábado)
+// A2 = variante del jueves (mismo Workout A, sin calf raise). B ya no tiene ejercicios de pierna.
 const WEEKDAY_SCHEDULE = {
   0: "rest",  // domingo
   1: "A",     // lunes
   2: "B",     // martes
   3: "rest",  // miércoles
-  4: "A",     // jueves
+  4: "A2",    // jueves
   5: "B",     // viernes
   6: "rest"   // sábado
 };
 const WEEKDAY_FULL = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+// A y A2 se muestran igual en pantalla ("Workout A"); B se muestra tal cual.
+const WORKOUT_DISPLAY_NAME = { A: "A", A2: "A", B: "B" };
+function workoutLabel(type){ return WORKOUT_DISPLAY_NAME[type] || type; }
 
 const QUOTES = [
   "Cada serie de hoy es peso que no vas a tener que levantar mañana.",
@@ -339,7 +364,7 @@ function weightUnitLabel(exerciseName){
 // Carga datos de ejemplo (últimas 2 semanas + hoy) solo si todavía no hay sesiones registradas,
 // para que las estadísticas y el Workout A de hoy ya se vean poblados.
 function seedDemoData(){
-  const occurrence = { A: 0, B: 0 };
+  const occurrence = { A: 0, A2: 0, B: 0 };
   for(let i = 13; i >= 0; i--){
     const d = new Date();
     d.setDate(d.getDate() - i);
@@ -446,7 +471,7 @@ function renderHome(){
     : QUOTES[dayOfYear % QUOTES.length];
 
   document.getElementById("streak-val").textContent = computeStreak() + " días";
-  document.getElementById("today-val").textContent = isRestDay ? "Descanso" : ("Workout " + todaysWorkout);
+  document.getElementById("today-val").textContent = isRestDay ? "Descanso" : ("Workout " + workoutLabel(todaysWorkout));
 
   document.getElementById("startBtn").style.display = isRestDay ? "none" : "block";
   document.getElementById("restBtn").style.display = isRestDay ? "block" : "none";
@@ -511,7 +536,7 @@ function maxWeightHistory(exerciseName){
   const points = [];
   const multiplier = isSingleImplement(exerciseName) ? 1 : 2;
   DATA.sessions.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(s=>{
-    const ex = s.exercises.find(e=>e.name===exerciseName);
+    const ex = s.exercises.find(e=>e.name===exerciseName && !e.skipped);
     if(ex){
       const weights = ex.sets.map(st=>(parseFloat(st.weight)||0)*multiplier).filter(w=>w>0);
       if(weights.length){
@@ -625,6 +650,35 @@ function getSessionForDate(dateStr, type){
   return DATA.sessions.find(s => s.date===dateStr && s.workoutType===type) || null;
 }
 
+function renderExerciseRows(container, type, session, isFuture){
+  const exercises = WORKOUTS[type];
+  exercises.forEach((ex, i)=>{
+    const loggedEx = session ? session.exercises.find(e=>e.name===ex.name) : null;
+    const row = document.createElement("div");
+    row.className = "day-ex-row";
+    let summary, loggedClass = "";
+    if(loggedEx && loggedEx.skipped){
+      summary = "No hecho";
+      loggedClass = "skipped";
+    } else if(loggedEx && loggedEx.sets.some(s=>s.weight||s.reps)){
+      const multiplier = isSingleImplement(ex.name) ? 1 : 2;
+      summary = loggedEx.sets.map(s=>{
+        const raw = parseFloat(s.weight);
+        const totalW = isNaN(raw) ? null : raw * multiplier;
+        return `${totalW!==null ? totalW : "-"}kg×${s.reps||"-"}`;
+      }).join(", ");
+      loggedClass = "logged";
+    } else if(isFuture){
+      const equipNote = isSingleImplement(ex.name) ? "" : " (c/u)";
+      summary = `Objetivo: ${ex.sets} sets, ${ex.reps} reps${equipNote}`;
+    } else {
+      summary = "Sin registrar";
+    }
+    row.innerHTML = `<div class="day-ex-name">${i+1}. ${ex.name}</div><div class="day-ex-sets ${loggedClass}">${summary}</div>`;
+    container.appendChild(row);
+  });
+}
+
 function renderDayView(){
   const dateStr = dayViewDate;
   const type = workoutForDate(dateStr);
@@ -640,43 +694,60 @@ function renderDayView(){
   content.innerHTML = "";
 
   if(type === "rest"){
-    const card = document.createElement("div");
-    card.className = "rest-card";
-    card.innerHTML = '<div class="rest-icon">💤</div><p>Día de descanso</p>';
-    content.appendChild(card);
+    // días de descanso: si ya hay algo registrado manualmente ese día, se muestra normal;
+    // si no, se ofrece la opción de cargar un Workout A o B igual (por si se corrió un día).
+    const manualSessions = DATA.sessions.filter(s => s.date === dateStr);
+
+    if(manualSessions.length === 0){
+      const card = document.createElement("div");
+      card.className = "rest-card";
+      card.innerHTML = '<div class="rest-icon">💤</div><p>Día de descanso</p>';
+      content.appendChild(card);
+
+      if(!isFuture){
+        const note = document.createElement("p");
+        note.className = "rest-manual-note";
+        note.textContent = "¿Te corriste un entrenamiento a este día? Lo podés registrar igual:";
+        content.appendChild(note);
+
+        ["A","B"].forEach(t=>{
+          const btn = document.createElement("button");
+          btn.className = "cta secondary";
+          btn.style.marginTop = "8px";
+          btn.textContent = "Registrar Workout " + t;
+          btn.addEventListener("click", ()=> openSession(t, dateStr, "day"));
+          content.appendChild(btn);
+        });
+      }
+      return;
+    }
+
+    manualSessions.forEach(session=>{
+      const title = document.createElement("div");
+      title.className = "day-workout-title";
+      title.textContent = "Workout " + workoutLabel(session.workoutType) + " · registrado en día de descanso";
+      content.appendChild(title);
+
+      renderExerciseRows(content, session.workoutType, session, isFuture);
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "cta";
+      editBtn.style.margin = "10px 0 18px";
+      editBtn.textContent = "Editar este día";
+      editBtn.addEventListener("click", ()=> openSession(session.workoutType, dateStr, "day"));
+      content.appendChild(editBtn);
+    });
     return;
   }
 
   const session = getSessionForDate(dateStr, type);
-  const exercises = WORKOUTS[type];
 
   const title = document.createElement("div");
   title.className = "day-workout-title";
-  title.textContent = "Workout " + type;
+  title.textContent = "Workout " + workoutLabel(type);
   content.appendChild(title);
 
-  exercises.forEach((ex, i)=>{
-    const loggedEx = session ? session.exercises.find(e=>e.name===ex.name) : null;
-    const row = document.createElement("div");
-    row.className = "day-ex-row";
-    let summary, loggedClass = "";
-    if(loggedEx && loggedEx.sets.some(s=>s.weight||s.reps)){
-      const multiplier = isSingleImplement(ex.name) ? 1 : 2;
-      summary = loggedEx.sets.map(s=>{
-        const raw = parseFloat(s.weight);
-        const totalW = isNaN(raw) ? null : raw * multiplier;
-        return `${totalW!==null ? totalW : "-"}kg×${s.reps||"-"}`;
-      }).join(", ");
-      loggedClass = "logged";
-    } else if(isFuture){
-      const equipNote = isSingleImplement(ex.name) ? "" : " (c/u)";
-      summary = `Objetivo: ${ex.sets} sets, ${ex.reps} reps${equipNote}`;
-    } else {
-      summary = "Sin registrar";
-    }
-    row.innerHTML = `<div class="day-ex-name">${i+1}. ${ex.name}</div><div class="day-ex-sets ${loggedClass}">${summary}</div>`;
-    content.appendChild(row);
-  });
+  renderExerciseRows(content, type, session, isFuture);
 
   if(!isFuture){
     const btn = document.createElement("button");
@@ -706,7 +777,7 @@ function openSession(type, dateStr, returnTo){
   sessionReturnView = returnTo || "home";
 
   showView("session");
-  document.getElementById("session-title").textContent = "Workout " + type;
+  document.getElementById("session-title").textContent = "Workout " + workoutLabel(type);
   const isToday = currentSessionDate === todayStr();
   document.getElementById("session-date-label").innerHTML =
     formatDateLabel(currentSessionDate) + (isToday ? ' <span style="color:var(--accent)">· Hoy</span>' : "");
@@ -723,9 +794,10 @@ function openSession(type, dateStr, returnTo){
   exercises.forEach((ex, idxEx)=>{
     const lastSets = getLastLoggedSets(ex.name, currentSessionDate);
     const existingEx = existingSession ? existingSession.exercises.find(e=>e.name===ex.name) : null;
+    const isSkipped = !!(existingEx && existingEx.skipped);
     const unitLabel = weightUnitLabel(ex.name);
     const card = document.createElement("div");
-    card.className = "ex-card";
+    card.className = "ex-card" + (isSkipped ? " skipped" : "");
     let setsHtml = "";
     for(let s=0; s<ex.sets; s++){
       const prevW = lastSets[s] ? lastSets[s].weight : "";
@@ -735,8 +807,8 @@ function openSession(type, dateStr, returnTo){
       setsHtml += `
         <div class="set-row">
           <span class="set-num">${s+1}</span>
-          <input type="number" inputmode="decimal" placeholder="${prevW || 'kg'}" value="${curW}" data-ex="${idxEx}" data-set="${s}" data-field="weight" min="0" step="0.5">
-          <input type="number" inputmode="numeric" placeholder="${prevR || 'reps'}" value="${curR}" data-ex="${idxEx}" data-set="${s}" data-field="reps" min="0" step="1">
+          <input type="number" inputmode="decimal" placeholder="${prevW || 'kg'}" value="${curW}" data-ex="${idxEx}" data-set="${s}" data-field="weight" min="0" step="0.5" ${isSkipped ? "disabled" : ""}>
+          <input type="number" inputmode="numeric" placeholder="${prevR || 'reps'}" value="${curR}" data-ex="${idxEx}" data-set="${s}" data-field="reps" min="0" step="1" ${isSkipped ? "disabled" : ""}>
           <span class="unit">${unitLabel}</span>
         </div>
       `;
@@ -746,20 +818,36 @@ function openSession(type, dateStr, returnTo){
       : "Todavía no registrado antes";
     const equipNote = isSingleImplement(ex.name) ? "" : " · peso por mancuerna";
     card.innerHTML = `
-      <div class="ex-title">${idxEx+1}. ${ex.name}</div>
+      <div class="ex-card-header">
+        <div class="ex-title">${idxEx+1}. ${ex.name}</div>
+        <label class="skip-toggle">
+          <input type="checkbox" class="skip-checkbox" data-ex="${idxEx}" ${isSkipped ? "checked" : ""}>
+          No hecho
+        </label>
+      </div>
       <div class="ex-target">Objetivo: ${ex.sets} sets, ${ex.reps} reps${equipNote}</div>
-      ${setsHtml}
+      <div class="sets-wrap" id="sets-wrap-${idxEx}">${setsHtml}</div>
       <div class="last-time">${lastNote}</div>
     `;
     container.appendChild(card);
   });
+
+  container.querySelectorAll(".skip-checkbox").forEach(cb=>{
+    cb.addEventListener("change", (e)=>{
+      const idxEx = e.target.dataset.ex;
+      const card = e.target.closest(".ex-card");
+      const inputs = card.querySelectorAll(`#sets-wrap-${idxEx} input`);
+      inputs.forEach(inp => inp.disabled = e.target.checked);
+      card.classList.toggle("skipped", e.target.checked);
+    });
+  });
 }
 
 function getLastLoggedSets(exerciseName, beforeDate){
-  const past = DATA.sessions.filter(s => s.date < beforeDate && s.exercises.some(e=>e.name===exerciseName));
+  const past = DATA.sessions.filter(s => s.date < beforeDate && s.exercises.some(e=>e.name===exerciseName && !e.skipped));
   if(past.length===0) return [];
   past.sort((a,b)=> b.date.localeCompare(a.date));
-  const ex = past[0].exercises.find(e=>e.name===exerciseName);
+  const ex = past[0].exercises.find(e=>e.name===exerciseName && !e.skipped);
   return ex ? ex.sets : [];
 }
 
@@ -783,8 +871,8 @@ function saveSession(){
   const type = currentSessionType;
   const date = currentSessionDate;
   const exercises = WORKOUTS[type];
-  const inputs = document.querySelectorAll("#session-exercises input");
-  const structured = exercises.map((ex, idx)=>({ name: ex.name, sets: Array.from({length:ex.sets}, ()=>({weight:"",reps:""})) }));
+  const inputs = document.querySelectorAll("#session-exercises input[data-field]");
+  const structured = exercises.map((ex, idx)=>({ name: ex.name, skipped: false, sets: Array.from({length:ex.sets}, ()=>({weight:"",reps:""})) }));
 
   inputs.forEach(inp=>{
     const exIdx = parseInt(inp.dataset.ex);
@@ -795,9 +883,17 @@ function saveSession(){
     }
   });
 
-  const hasAnyData = structured.some(ex => ex.sets.some(s => s.weight !== "" || s.reps !== ""));
+  document.querySelectorAll("#session-exercises .skip-checkbox").forEach(cb=>{
+    const exIdx = parseInt(cb.dataset.ex);
+    if(cb.checked){
+      structured[exIdx].skipped = true;
+      structured[exIdx].sets = structured[exIdx].sets.map(()=>({weight:"",reps:""}));
+    }
+  });
+
+  const hasAnyData = structured.some(ex => ex.skipped || ex.sets.some(s => s.weight !== "" || s.reps !== ""));
   if(!hasAnyData){
-    showToast("Cargá al menos un set antes de guardar");
+    showToast("Cargá al menos un set, o marcá algún ejercicio como no hecho");
     return;
   }
 
