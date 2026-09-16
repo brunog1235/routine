@@ -1,965 +1,1894 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Routine</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Routine - Pesas y Running</title>
+
 <style>
-  :root{
-    --bg:#faf9f6; --card:#ffffff; --border:#e8e6df;
-    --text:#1e1e23; --text-2:#6b6a66; --text-3:#98968e;
-    --accent:#3a36b0; --accent-2:#5a56c8; --accent-light:#eeedfe;
-    --success:#0f6e56; --success-bg:#e1f5ee;
-    --danger:#993c1d; --gray:#888780;
-    --radius:14px;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    background:var(--bg); color:var(--text); padding-bottom:90px;
-    max-width:480px; margin:0 auto; min-height:100vh; position:relative;
-  }
-  header{
-    padding:20px 20px 12px; position:sticky; top:0; background:var(--bg); z-index:10;
-  }
-  header h1{font-size:20px; font-weight:700;}
-  .quote{
-    font-style:italic; font-size:14px; color:var(--text-2); margin:6px 0 0; line-height:1.5;
-  }
-  main{padding:0 20px;}
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0;}
-  .stat-card{
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:14px 16px;
-  }
-  .stat-card .label{font-size:12px; color:var(--text-2); margin-bottom:4px;}
-  .stat-card .value{font-size:22px; font-weight:700;}
-  .section-title{font-size:13px; color:var(--text-2); margin:20px 0 8px; font-weight:600; text-transform:uppercase; letter-spacing:0.02em;}
-  .chart-wrap{
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:14px; height:170px; position:relative;
-  }
-  .ex-row{
-    display:flex; align-items:center; justify-content:space-between;
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:10px 14px; margin-bottom:8px;
-  }
-  .ex-row .name{font-size:14px; font-weight:600;}
-  .ex-row .delta{font-size:12px; color:var(--success); margin-top:2px;}
-  .ex-row .spark{width:70px; height:30px;}
-  .pr{
-    display:flex; align-items:center; gap:8px; background:var(--success-bg);
-    border-radius:var(--radius); padding:10px 14px; margin-bottom:6px; font-size:13px;
-  }
-  .pr-icon{color:var(--success); font-weight:700;}
-  .empty-hint{
-    font-size:13px; color:var(--text-3); text-align:center; padding:20px 10px;
-  }
-  .cta{
-    display:block; width:100%; padding:15px; font-size:15px; font-weight:700;
-    background:var(--accent); color:#fff; border:none; border-radius:var(--radius);
-    margin:20px 0 8px; cursor:pointer;
-  }
-  .cta:active{opacity:0.85;}
-  .cta.secondary{background:var(--card); color:var(--accent); border:1px solid var(--accent);}
+:root {
+  --bg:#faf9f6;
+  --card:#fff;
+  --border:#e8e6df;
+  --text:#1e1e23;
+  --t2:#6b6a66;
+  --t3:#98968e;
+  --accent:#3a36b0;
+  --light:#eeedfe;
+  --ok:#0f6e56;
+  --okbg:#e1f5ee;
+  --run:#c45119;
+  --runbg:#fff0e8;
+  --radius:14px;
+}
 
-  /* Session view */
-  .session-header{
-    display:flex; align-items:center; gap:10px; margin-bottom:4px;
-  }
-  .back-btn{
-    background:none; border:none; font-size:22px; color:var(--text); cursor:pointer; padding:4px 8px 4px 0;
-  }
-  .session-header h2{font-size:19px; font-weight:700;}
-  .ex-card{
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:14px 16px; margin-bottom:12px;
-  }
-  .ex-card .ex-title{font-size:15px; font-weight:700; margin-bottom:2px;}
-  .ex-card .ex-target{font-size:12px; color:var(--text-2); margin-bottom:10px;}
-  .set-row{
-    display:grid; grid-template-columns:28px 1fr 1fr auto; gap:8px; align-items:center; margin-bottom:8px;
-  }
-  .set-row .set-num{font-size:13px; color:var(--text-3); font-weight:600;}
-  .set-row input{
-    width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px;
-    font-size:14px; background:var(--bg); color:var(--text);
-  }
-  .set-row input:focus{outline:none; border-color:var(--accent);}
-  .set-row .unit{font-size:12px; color:var(--text-3);}
-  .last-time{font-size:11px; color:var(--text-3); margin-top:6px;}
-  .save-bar{
-    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    width:100%; max-width:480px; background:var(--bg); padding:14px 20px 20px;
-    border-top:1px solid var(--border);
-  }
-  .toast{
-    position:fixed; top:16px; left:50%; transform:translateX(-50%);
-    background:var(--text); color:#fff; padding:10px 18px; border-radius:20px;
-    font-size:13px; opacity:0; pointer-events:none; transition:opacity 0.25s; z-index:100;
-  }
-  .toast.show{opacity:1;}
-  .view{display:none;}
-  .view.active{display:block;}
-  .day-badge{
-    display:inline-block; font-size:11px; font-weight:700; padding:3px 9px;
-    border-radius:20px; background:var(--accent-light); color:var(--accent); margin-top:4px;
-  }
+* {
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-  /* Bottom nav */
-  .bottom-nav{
-    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    width:100%; max-width:480px; background:var(--card); border-top:1px solid var(--border);
-    display:flex; z-index:20;
-  }
-  .nav-btn{
-    flex:1; background:none; border:none; padding:10px 0 8px; display:flex; flex-direction:column;
-    align-items:center; gap:2px; color:var(--text-3); font-size:11px; cursor:pointer;
-  }
-  .nav-btn .nav-icon{font-size:19px; line-height:1;}
-  .nav-btn.active{color:var(--accent); font-weight:700;}
+body {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  max-width:480px;
+  margin:auto;
+  min-height:100vh;
+  padding-bottom:88px;
+}
 
-  /* Day view */
-  .day-nav{display:flex; align-items:center; justify-content:space-between; margin:4px 0 18px;}
-  .day-arrow{
-    background:var(--card); border:1px solid var(--border); border-radius:50%;
-    width:40px; height:40px; font-size:19px; cursor:pointer; color:var(--text); flex-shrink:0;
-  }
-  .day-arrow:active{background:var(--accent-light);}
-  .day-nav-center{text-align:center;}
-  .day-date{font-size:16px; font-weight:700;}
-  .day-date .today-tag{color:var(--accent);}
-  .rest-card{
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:44px 20px; text-align:center; color:var(--text-2);
-  }
-  .rest-icon{font-size:30px; margin-bottom:10px;}
-  .rest-manual-note{font-size:13px; color:var(--text-2); text-align:center; margin:16px 0 0;}
-  .day-workout-title{font-size:16px; font-weight:700; margin-bottom:10px;}
-  .day-ex-row{
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:10px 14px; margin-bottom:8px;
-  }
-  .day-ex-name{font-size:14px; font-weight:600;}
-  .day-ex-sets{font-size:12px; color:var(--text-2); margin-top:2px;}
-  .day-ex-sets.logged{color:var(--success); font-weight:600;}
-  .day-ex-sets.skipped{color:var(--text-3); font-style:italic;}
+header {
+  padding:20px 20px 12px;
+  position:sticky;
+  top:0;
+  background:var(--bg);
+  z-index:10;
+}
 
-  .ex-card-header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
-  .skip-toggle{
-    display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-2);
-    white-space:nowrap; cursor:pointer; padding-top:2px;
-  }
-  .skip-toggle input{width:15px; height:15px; accent-color:var(--accent);}
-  .ex-card.skipped{opacity:0.55;}
-  .ex-card.skipped .ex-title{text-decoration:line-through;}
+h1 {
+  font-size:20px;
+}
 
-  .session-day-nav{
-    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;
-  }
-  .day-arrow.small{width:32px; height:32px; font-size:16px;}
-  .session-day-info{text-align:center;}
-  .session-date-label{font-size:13px; font-weight:600; color:var(--text-2);}
+main {
+  padding:0 20px;
+}
+
+.quote {
+  font-style:italic;
+  font-size:14px;
+  color:var(--t2);
+  margin-top:6px;
+  line-height:1.45;
+}
+
+.grid2 {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:16px 0;
+}
+
+.card,
+.stat,
+.exercise,
+.run-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+
+.stat {
+  padding:14px 16px;
+}
+
+.label {
+  font-size:12px;
+  color:var(--t2);
+  margin-bottom:4px;
+}
+
+.value {
+  font-size:21px;
+  font-weight:750;
+}
+
+.section-title {
+  font-size:13px;
+  color:var(--t2);
+  margin:20px 0 8px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+.chart {
+  height:170px;
+  padding:14px;
+}
+
+.bars {
+  height:100%;
+  display:flex;
+  align-items:flex-end;
+  gap:9px;
+  padding-top:8px;
+}
+
+.barcol {
+  flex:1;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  align-items:center;
+  gap:5px;
+}
+
+.bar {
+  width:100%;
+  max-width:30px;
+  background:#7f77dd;
+  border-radius:5px 5px 2px 2px;
+  min-height:3px;
+}
+
+.barval {
+  font-size:9px;
+  color:var(--t2);
+}
+
+.barlabel {
+  font-size:10px;
+  color:var(--t3);
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:11px 14px;
+  margin-bottom:8px;
+}
+
+.name {
+  font-size:14px;
+  font-weight:700;
+}
+
+.sub {
+  font-size:12px;
+  color:var(--t2);
+  margin-top:3px;
+}
+
+.ok {
+  color:var(--ok);
+}
+
+button,
+input,
+textarea {
+  font:inherit;
+}
+
+.btn {
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:var(--radius);
+  font-weight:750;
+  background:var(--accent);
+  color:white;
+  margin:16px 0 0;
+  cursor:pointer;
+}
+
+.btn:disabled {
+  opacity:.45;
+  cursor:default;
+}
+
+.btn.run {
+  background:var(--run);
+}
+
+.btn.small {
+  width:auto;
+  padding:8px 12px;
+  margin:0;
+  font-size:12px;
+}
+
+.muted-btn {
+  display:block;
+  width:100%;
+  border:0;
+  background:none;
+  color:var(--t3);
+  padding:14px;
+  cursor:pointer;
+}
+
+.empty {
+  text-align:center;
+  color:var(--t3);
+  font-size:13px;
+  padding:22px 8px;
+}
+
+.bottom {
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  max-width:480px;
+  width:100%;
+  background:#fff;
+  border-top:1px solid var(--border);
+  display:flex;
+  z-index:30;
+}
+
+.nav {
+  flex:1;
+  border:0;
+  background:none;
+  padding:9px 0 7px;
+  color:var(--t3);
+  font-size:10px;
+  cursor:pointer;
+}
+
+.nav span {
+  display:block;
+  font-size:19px;
+}
+
+.nav.active {
+  color:var(--accent);
+  font-weight:750;
+}
+
+.view {
+  display:none;
+}
+
+.view.active {
+  display:block;
+}
+
+.day-nav {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:5px 0 17px;
+}
+
+.arrow {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:white;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.center {
+  text-align:center;
+}
+
+.badge {
+  display:inline-block;
+  background:var(--light);
+  color:var(--accent);
+  border-radius:20px;
+  padding:3px 9px;
+  font-size:11px;
+  font-weight:750;
+  margin-top:4px;
+}
+
+.rest {
+  padding:40px 20px;
+  text-align:center;
+  color:var(--t2);
+}
+
+.exercise {
+  padding:14px 16px;
+  margin-bottom:12px;
+}
+
+.ex-head {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.target {
+  font-size:12px;
+  color:var(--t2);
+  margin:3px 0 10px;
+}
+
+.set {
+  display:grid;
+  grid-template-columns:25px 1fr 1fr;
+  gap:8px;
+  margin-bottom:8px;
+  align-items:center;
+}
+
+.set input,
+.field {
+  width:100%;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg);
+}
+
+.skip {
+  font-size:11px;
+  color:var(--t2);
+}
+
+.exercise.skipped {
+  opacity:.5;
+}
+
+.savebar {
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  max-width:480px;
+  width:100%;
+  padding:12px 20px 18px;
+  background:var(--bg);
+  border-top:1px solid var(--border);
+  z-index:40;
+}
+
+.toast {
+  position:fixed;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#1e1e23;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:20px;
+  opacity:0;
+  z-index:80;
+  transition:.2s;
+  pointer-events:none;
+}
+
+.toast.show {
+  opacity:1;
+}
+
+.run-hero {
+  background:linear-gradient(135deg,#b94716,#e47a31);
+  color:#fff;
+  padding:18px;
+  border-radius:18px;
+  margin:4px 0 14px;
+}
+
+.run-hero .label {
+  color:#ffe4d3;
+}
+
+.run-card {
+  padding:14px;
+  margin-bottom:10px;
+  border-left:4px solid var(--run);
+}
+
+.run-top {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.run-title {
+  font-weight:750;
+  font-size:15px;
+}
+
+.run-detail {
+  font-size:13px;
+  color:var(--t2);
+  line-height:1.45;
+  margin-top:6px;
+}
+
+.done {
+  background:var(--okbg);
+  color:var(--ok);
+  font-size:11px;
+  font-weight:750;
+  padding:4px 8px;
+  border-radius:20px;
+  white-space:nowrap;
+}
+
+.week-nav {
+  display:grid;
+  grid-template-columns:42px 1fr 42px;
+  align-items:center;
+  gap:8px;
+  margin:12px 0;
+}
+
+.week-nav button {
+  height:38px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:white;
+  cursor:pointer;
+}
+
+.week-title {
+  text-align:center;
+  font-weight:750;
+}
+
+.date-config {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+
+.date-config .btn {
+  margin:0;
+}
+
+.run-form {
+  padding:14px;
+  margin-top:10px;
+  background:var(--runbg);
+  border-radius:12px;
+}
+
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.form-grid label,
+.full-label {
+  display:block;
+  font-size:11px;
+  color:var(--t2);
+}
+
+textarea.field {
+  min-height:72px;
+  resize:vertical;
+}
+
+.back {
+  border:0;
+  background:none;
+  font-size:22px;
+  padding-right:10px;
+  cursor:pointer;
+}
+
+.session-head {
+  display:flex;
+  align-items:center;
+}
+
+.note {
+  font-size:12px;
+  color:var(--t2);
+  line-height:1.45;
+}
 </style>
 </head>
+
 <body>
 
-<div class="toast" id="toast"></div>
+<div id="toast" class="toast"></div>
 
-<!-- HOME VIEW -->
-<div class="view active" id="view-home">
+<section id="home" class="view active">
   <header>
     <h1>Routine</h1>
-    <p class="quote" id="quote"></p>
+    <p id="quote" class="quote"></p>
   </header>
+
   <main>
     <div class="grid2">
-      <div class="stat-card">
+      <div class="stat">
         <div class="label">🔥 Racha</div>
-        <div class="value" id="streak-val">0 días</div>
+        <div id="streak" class="value">0 días</div>
       </div>
-      <div class="stat-card">
+
+      <div class="stat">
         <div class="label">📅 Hoy toca</div>
-        <div class="value" id="today-val">—</div>
+        <div id="today" class="value">—</div>
       </div>
     </div>
 
-    <div class="section-title">Volumen semanal (kg totales)</div>
-    <div class="chart-wrap"><canvas id="volChart"></canvas></div>
+    <div class="section-title">Volumen semanal de pesas</div>
+    <div id="volumeChart" class="card chart"></div>
 
     <div class="section-title">Progreso por ejercicio</div>
-    <div id="exerciseProgress"></div>
+    <div id="progress"></div>
 
     <div class="section-title">Mejoras recientes</div>
-    <div id="prList"></div>
+    <div id="prs"></div>
 
-    <button class="cta" id="startBtn">Empezar workout de hoy</button>
-    <button class="cta secondary" id="restBtn" style="display:none;">Marcar día de descanso</button>
-    <button id="resetDataBtn" style="display:block; width:100%; text-align:center; background:none; border:none; color:var(--text-3); font-size:12px; padding:14px 0 4px; cursor:pointer;">Reiniciar datos</button>
+    <button id="todayAction" class="btn">Empezar sesión</button>
+    <button id="reset" class="muted-btn">Reiniciar todos los datos</button>
   </main>
-</div>
+</section>
 
-<!-- DAY VIEW -->
-<div class="view" id="view-day">
+<section id="days" class="view">
   <header>
     <h1>Días</h1>
   </header>
+
   <main>
     <div class="day-nav">
-      <button class="day-arrow" id="prevDayBtn" aria-label="Día anterior">‹</button>
-      <div class="day-nav-center">
-        <div class="day-date" id="day-date-label"></div>
-        <span class="day-badge" id="day-cycle-badge"></span>
-      </div>
-      <button class="day-arrow" id="nextDayBtn" aria-label="Día siguiente">›</button>
-    </div>
-    <div id="day-content"></div>
-  </main>
-</div>
+      <button id="prevDay" class="arrow">‹</button>
 
-<!-- SESSION VIEW -->
-<div class="view" id="view-session">
-  <header>
-    <div class="session-header">
-      <button class="back-btn" id="backBtn">←</button>
-      <h2 id="session-title">Workout A</h2>
-    </div>
-    <div class="session-day-nav">
-      <button class="day-arrow small" id="sessionPrevBtn" aria-label="Día anterior">‹</button>
-      <div class="session-day-info">
-        <div class="session-date-label" id="session-date-label"></div>
-        <span class="day-badge" id="session-day-badge"></span>
+      <div class="center">
+        <div id="dayLabel" class="name"></div>
+        <span id="dayBadge" class="badge"></span>
       </div>
-      <button class="day-arrow small" id="sessionNextBtn" aria-label="Día siguiente">›</button>
+
+      <button id="nextDay" class="arrow">›</button>
+    </div>
+
+    <div id="dayContent"></div>
+  </main>
+</section>
+
+<section id="running" class="view">
+  <header>
+    <h1>Running</h1>
+    <p class="quote">Media maratón · 18 semanas</p>
+  </header>
+
+  <main>
+    <div class="run-hero">
+      <div class="label">Semana actual</div>
+      <div id="runWeekHero" class="value">Semana 1</div>
+      <div id="runHeroStats" class="sub" style="color:#fff1e8"></div>
+    </div>
+
+    <div class="date-config">
+      <input id="planStart" class="field" type="date">
+      <button id="saveStart" class="btn small run">Fijar inicio</button>
+    </div>
+
+    <p class="note" style="margin-top:7px">
+      Elegí el lunes de la semana 1. El calendario se ajusta automáticamente.
+    </p>
+
+    <div class="week-nav">
+      <button id="prevWeek">‹</button>
+      <div id="weekTitle" class="week-title"></div>
+      <button id="nextWeek">›</button>
+    </div>
+
+    <div id="runSessions"></div>
+  </main>
+</section>
+
+<section id="session" class="view">
+  <header>
+    <div class="session-head">
+      <button id="back" class="back">←</button>
+
+      <div>
+        <h1 id="sessionTitle"></h1>
+        <div id="sessionDate" class="sub"></div>
+      </div>
     </div>
   </header>
-  <main id="session-exercises" style="padding-bottom:80px;"></main>
-  <div class="save-bar">
-    <button class="cta" id="saveSessionBtn" style="margin:0;">Guardar sesión</button>
+
+  <main id="exerciseList" style="padding-bottom:90px"></main>
+
+  <div class="savebar">
+    <button id="saveStrength" class="btn" style="margin:0">
+      Guardar sesión
+    </button>
   </div>
-</div>
+</section>
 
-<!-- BOTTOM NAV -->
-<div class="bottom-nav" id="bottomNav">
-  <button class="nav-btn active" id="navHomeBtn">
-    <span class="nav-icon">⌂</span>
-    <span>Inicio</span>
+<nav id="bottom" class="bottom">
+  <button class="nav active" data-view="home">
+    <span>⌂</span>
+    Inicio
   </button>
-  <button class="nav-btn" id="navDayBtn">
-    <span class="nav-icon">▤</span>
-    <span>Días</span>
-  </button>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <button class="nav" data-view="days">
+    <span>▤</span>
+    Días
+  </button>
+
+  <button class="nav" data-view="running">
+    <span>◉</span>
+    Running
+  </button>
+</nav>
+
 <script>
-/* ================= DATA ================= */
 const WORKOUTS = {
   A: [
-    { name: "Bench press / Floor press / Weighted pushups", sets: 3, reps: "8-15" },
-    { name: "Pullover", sets: 3, reps: "8-15" },
-    { name: "Overhead press", sets: 3, reps: "8-15" },
-    { name: "Biceps curl", sets: 3, reps: "12-20" },
-    { name: "Skullcrusher / Any overhead extension", sets: 3, reps: "15-20" },
-    { name: "Rear delt fly", sets: 3, reps: "15-20" },
-    { name: "Lateral raise", sets: 3, reps: "15-20" },
-    { name: "Front squat", sets: 3, reps: "8-15" },
-    { name: "Romanian deadlift", sets: 3, reps: "8-15" },
-    { name: "Calf raise", sets: 3, reps: "15-25" }
+    {name:"Bench press / Floor press / Weighted pushups",sets:3,reps:"8-15"},
+    {name:"Pullover",sets:3,reps:"8-15"},
+    {name:"Overhead press",sets:3,reps:"8-15"},
+    {name:"Biceps curl",sets:3,reps:"12-20"},
+    {name:"Skullcrusher / Any overhead extension",sets:3,reps:"15-20"},
+    {name:"Rear delt fly",sets:3,reps:"15-20"},
+    {name:"Lateral raise",sets:3,reps:"15-20"},
+    {name:"Front squat",sets:3,reps:"8-15"},
+    {name:"Romanian deadlift",sets:3,reps:"8-15"},
+    {name:"Calf raise",sets:3,reps:"15-25"}
   ],
-  // Variante del jueves: mismo Workout A, sin calf raise (para no acumular tanto volumen de pierna
-  // con las corridas de miércoles y sábado).
-  A2: [
-    { name: "Bench press / Floor press / Weighted pushups", sets: 3, reps: "8-15" },
-    { name: "Pullover", sets: 3, reps: "8-15" },
-    { name: "Overhead press", sets: 3, reps: "8-15" },
-    { name: "Biceps curl", sets: 3, reps: "12-20" },
-    { name: "Skullcrusher / Any overhead extension", sets: 3, reps: "15-20" },
-    { name: "Rear delt fly", sets: 3, reps: "15-20" },
-    { name: "Lateral raise", sets: 3, reps: "15-20" },
-    { name: "Front squat", sets: 3, reps: "8-15" },
-    { name: "Romanian deadlift", sets: 3, reps: "8-15" }
-  ],
+
   B: [
-    { name: "Overhead press", sets: 3, reps: "8-15" },
-    { name: "Dumbbell row", sets: 3, reps: "8-15" },
-    { name: "Incline bench press / Decline pushup", sets: 3, reps: "8-15" },
-    { name: "Hammer curl", sets: 3, reps: "12-20" },
-    { name: "Triceps kickback", sets: 3, reps: "15-20" },
-    { name: "Rear delt fly", sets: 3, reps: "15-20" },
-    { name: "Lateral raise", sets: 3, reps: "15-20" }
+    {name:"Overhead press",sets:3,reps:"8-15"},
+    {name:"Dumbbell row",sets:3,reps:"8-15"},
+    {name:"Incline bench press / Decline pushup",sets:3,reps:"8-15"},
+    {name:"Hammer curl",sets:3,reps:"12-20"},
+    {name:"Triceps kickback",sets:3,reps:"15-20"},
+    {name:"Rear delt fly",sets:3,reps:"15-20"},
+    {name:"Lateral raise",sets:3,reps:"15-20"}
+  ],
+
+  B2: [
+    {name:"Overhead press",sets:3,reps:"8-15"},
+    {name:"Dumbbell row",sets:3,reps:"8-15"},
+    {name:"Incline bench press / Decline pushup",sets:3,reps:"8-15"},
+    {name:"Hammer curl",sets:3,reps:"12-20"},
+    {name:"Triceps kickback",sets:3,reps:"15-20"},
+    {name:"Rear delt fly",sets:3,reps:"15-20"},
+    {name:"Lateral raise",sets:3,reps:"15-20"},
+    {name:"Lunges",sets:2,reps:"8-12 por pierna"},
+    {name:"Front squat",sets:2,reps:"8-12"},
+    {name:"Calf raise",sets:3,reps:"15-25"}
   ]
 };
 
-// horario fijo por día de la semana (0=domingo, 1=lunes, ... 6=sábado)
-// A2 = variante del jueves (mismo Workout A, sin calf raise). B ya no tiene ejercicios de pierna.
-const WEEKDAY_SCHEDULE = {
-  0: "rest",  // domingo
-  1: "A",     // lunes
-  2: "B",     // martes
-  3: "rest",  // miércoles
-  4: "A2",    // jueves
-  5: "B",     // viernes
-  6: "rest"   // sábado
+const STRENGTH = {
+  1:"A",
+  2:"B",
+  4:"B2"
 };
-const WEEKDAY_FULL = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-// A y A2 se muestran igual en pantalla ("Workout A"); B se muestra tal cual.
-const WORKOUT_DISPLAY_NAME = { A: "A", A2: "A", B: "B" };
-function workoutLabel(type){ return WORKOUT_DISPLAY_NAME[type] || type; }
+
+const RUN_DAY = {
+  3:"quality",
+  6:"long",
+  0:"easy"
+};
+
+const DISPLAY = {
+  A:"A",
+  B:"B torso",
+  B2:"B completo"
+};
+
+const RUN_PLAN = [
+  ["Fácil 4 km","Fondo 6 km","Fácil 4 km"],
+  ["Fácil 5 km","Fondo 7 km","Fácil 4 km"],
+  ["Fácil 5 km + 4 progresiones","Fondo 8 km","Fácil 4 km"],
+  ["Fácil 5 km","Fondo 9 km","Fácil 5 km"],
+
+  ["1,5 km cal. + 3 km RMM + 1,5 km enf.","Fondo 10 km","Fácil 5 km"],
+  ["1,5 km cal. + 6×400 m rápido, 200 m trote + 1,5 km enf.","Fondo 11 km","Fácil 5 km"],
+  ["1,5 km cal. + 6×600 m rápido, 200 m trote + 1,5 km enf.","Fondo 12 km","Fácil 6 km"],
+  ["Fácil 6 km + 4 progresiones","Fondo 10 km · descarga","Fácil 5 km"],
+
+  ["1,5 km cal. + 4×1 km rápido, 400 m trote + 1,5 km enf.","Fondo 13 km","Fácil 6 km"],
+  ["1,5 km cal. + 6 km RMM + 1,5 km enf.","Fondo 14 km","Fácil 6 km"],
+  ["1,5 km cal. + 3×2 km RMM, 500 m trote + 1,5 km enf.","Fondo 15 km","Fácil 7 km"],
+  ["Fácil 6 km","Fondo 12 km · descarga","Fácil 5 km"],
+
+  ["1,5 km cal. + 3×2 km RMM-5 s/km, 500 m trote + 1,5 km enf.","Fondo 16 km","Fácil 7 km"],
+  ["1,5 km cal. + 8 km RMM + 1,5 km enf.","Fondo 17 km","Fácil 7 km"],
+  ["1,5 km cal. + 2×3 km RMM-5 s/km, 800 m trote + 1,5 km enf.","Fondo 18 km","Fácil 6 km"],
+  ["1,5 km cal. + 8 km RMM + 1,5 km enf.","Fondo 19 km","Fácil 5 km"],
+
+  ["1,5 km cal. + 5 km RMM + 1,5 km enf.","Fondo 14 km · descarga","Fácil 4 km"],
+  ["Fácil 5 km + 4 progresiones","Activación 3 km muy fácil","CARRERA 21,1 km"]
+];
+
+const STORE = "workoutTrackerData";
+const SINGLE = new Set(["Pullover","Dumbbell row"]);
+
+const DAYS = [
+  "Domingo",
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado"
+];
+
+const MONTHS = [
+  "ene","feb","mar","abr","may","jun",
+  "jul","ago","sep","oct","nov","dic"
+];
 
 const QUOTES = [
-  "Cada serie de hoy es peso que no vas a tener que levantar mañana.",
-  "No hace falta motivación, hace falta la primera serie.",
-  "La racha ya es un hábito, no una decisión.",
-  "El progreso no se ve en un día, se ve en semanas como esta.",
+  "No hace falta motivación, hace falta empezar.",
   "Hoy no tiene que ser perfecto, tiene que ser hecho.",
   "La constancia le gana al talento cuando el talento no entrena.",
-  "Un entrenamiento más cerca de la próxima marca personal.",
-  "Nadie se arrepintió nunca de haber entrenado.",
-  "El cuerpo que querés se construye en días como hoy, sin drama.",
-  "Menos excusas, más series."
+  "Cada sesión suma, aunque no todas se sientan increíbles."
 ];
 
-const REST_QUOTES = [
-  "Hoy toca descansar. El músculo crece en el descanso, no solo en el gimnasio.",
-  "Día de recuperación. Mañana volvés con todo.",
-  "Descansar también es parte del plan."
-];
-
-const BASE_WEIGHTS = {
-  "Bench press / Floor press / Weighted pushups": 40,
-  "Pullover": 12,
-  "Overhead press": 25,
-  "Biceps curl": 10,
-  "Skullcrusher / Any overhead extension": 15,
-  "Rear delt fly": 6,
-  "Lateral raise": 6,
-  "Front squat": 40,
-  "Romanian deadlift": 40,
-  "Calf raise": 30,
-  "Dumbbell row": 20,
-  "Incline bench press / Decline pushup": 30,
-  "Hammer curl": 10,
-  "Triceps kickback": 6,
-  "Lunges": 12
-};
-
-function repsMidFor(rangeStr){
-  const [lo, hi] = rangeStr.split("-").map(Number);
-  return Math.round((lo + hi) / 2);
+function localDate(date = new Date()) {
+  return date.getFullYear() + "-" +
+    String(date.getMonth() + 1).padStart(2,"0") + "-" +
+    String(date.getDate()).padStart(2,"0");
 }
 
-// Ejercicios que se hacen con una sola mancuerna (el peso cargado ya es el total real).
-// Para el resto, el peso que se carga es por mancuerna, no el total.
-const SINGLE_IMPLEMENT_EXERCISES = new Set(["Pullover", "Dumbbell row"]);
-
-function isSingleImplement(exerciseName){
-  return SINGLE_IMPLEMENT_EXERCISES.has(exerciseName);
+function dateObj(dateString) {
+  return new Date(dateString + "T00:00:00");
 }
 
-function weightUnitLabel(exerciseName){
-  return isSingleImplement(exerciseName) ? "kg × rep" : "kg c/u × rep";
+function shift(dateString, days) {
+  const date = dateObj(dateString);
+  date.setDate(date.getDate() + days);
+  return localDate(date);
 }
 
-// Carga datos de ejemplo (últimas 2 semanas + hoy) solo si todavía no hay sesiones registradas,
-// para que las estadísticas y el Workout A de hoy ya se vean poblados.
-function seedDemoData(){
-  const occurrence = { A: 0, A2: 0, B: 0 };
-  for(let i = 13; i >= 0; i--){
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = toLocalDateStr(d);
-    const type = workoutForDate(dateStr);
-    if(type === "rest") continue;
+function mondayOf(dateString) {
+  const date = dateObj(dateString);
+  const day = date.getDay();
 
-    const occIdx = occurrence[type];
-    occurrence[type]++;
-    const bonus = occIdx * 2.5;
+  date.setDate(
+    date.getDate() - (day === 0 ? 6 : day - 1)
+  );
 
-    const exercises = WORKOUTS[type].map(ex=>{
-      const base = BASE_WEIGHTS[ex.name] || 20;
-      const w = base + bonus;
-      const mid = repsMidFor(ex.reps);
-      return {
-        name: ex.name,
-        sets: [
-          { weight: String(w), reps: String(mid + 1) },
-          { weight: String(w), reps: String(mid) },
-          { weight: String(w), reps: String(Math.max(mid - 1, 1)) }
-        ]
-      };
-    });
+  return localDate(date);
+}
 
-    DATA.sessions.push({ date: dateStr, workoutType: type, exercises });
+function fmt(dateString) {
+  const date = dateObj(dateString);
+
+  return DAYS[date.getDay()] + " " +
+    date.getDate() + " " +
+    MONTHS[date.getMonth()];
+}
+
+let memoryStore = null;
+
+function storageGet() {
+  try {
+    return localStorage.getItem(STORE);
+  } catch(error) {
+    return memoryStore;
   }
-  saveData(DATA);
 }
 
-/* ================= STORAGE ================= */
-const STORE_KEY = "workoutTrackerData";
-
-function toLocalDateStr(date){
-  const y = date.getFullYear();
-  const m = String(date.getMonth()+1).padStart(2,"0");
-  const d = String(date.getDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
-}
-
-function loadData(){
-  const raw = localStorage.getItem(STORE_KEY);
-  if(raw){
-    try{ return JSON.parse(raw); }catch(e){}
+function storageSet(value) {
+  try {
+    localStorage.setItem(STORE,value);
+  } catch(error) {
+    memoryStore = value;
   }
-  const fresh = { startDate: toLocalDateStr(new Date()), sessions: [] };
-  localStorage.setItem(STORE_KEY, JSON.stringify(fresh));
-  return fresh;
-}
-function saveData(data){
-  localStorage.setItem(STORE_KEY, JSON.stringify(data));
 }
 
-let DATA = loadData();
-
-/* ================= WEEKDAY SCHEDULE / DATE HELPERS ================= */
-function daysBetween(d1, d2){
-  const a = new Date(d1 + "T00:00:00");
-  const b = new Date(d2 + "T00:00:00");
-  return Math.round((b - a) / 86400000);
-}
-function todayStr(){
-  return toLocalDateStr(new Date());
-}
-function weekdayOf(dateStr){
-  return new Date(dateStr + "T00:00:00").getDay(); // 0-6
-}
-function workoutForDate(dateStr){
-  return WEEKDAY_SCHEDULE[weekdayOf(dateStr)];
+function storageRemove() {
+  try {
+    localStorage.removeItem(STORE);
+  } catch(error) {
+    memoryStore = null;
+  }
 }
 
-/* ================= STREAK ================= */
-function computeStreak(){
-  // count consecutive days (going backward from today) where the scheduled
-  // workout day either has a logged session, or was a rest day (auto-pass)
-  let streak = 0;
-  let cursor = new Date();
-  while(true){
-    const dStr = toLocalDateStr(cursor);
-    const w = workoutForDate(dStr);
-    if(w === "rest"){
-      streak++;
-    } else {
-      const done = DATA.sessions.some(s => s.date === dStr && s.workoutType === w);
-      if(done){ streak++; }
-      else if(dStr === todayStr()){ /* today not logged yet, don't break streak */ }
-      else break;
+function load() {
+  let data;
+
+  try {
+    data = JSON.parse(storageGet());
+  } catch(error) {}
+
+  data = data || {
+    startDate:localDate(),
+    sessions:[]
+  };
+
+  data.sessions = Array.isArray(data.sessions)
+    ? data.sessions
+    : [];
+
+  data.runSessions = Array.isArray(data.runSessions)
+    ? data.runSessions
+    : [];
+
+  data.runPlanStart =
+    data.runPlanStart || mondayOf(localDate());
+
+  return data;
+}
+
+let DATA = load();
+
+function save() {
+  storageSet(JSON.stringify(DATA));
+}
+
+function toast(message) {
+  const element = document.querySelector("#toast");
+
+  element.textContent = message;
+  element.classList.add("show");
+
+  setTimeout(() => {
+    element.classList.remove("show");
+  },1700);
+}
+
+function planInfo(dateString) {
+  const difference = Math.floor(
+    (dateObj(dateString) - dateObj(DATA.runPlanStart)) / 86400000
+  );
+
+  const week = Math.floor(difference / 7) + 1;
+  const day = dateObj(dateString).getDay();
+
+  if(week < 1 || week > 18 || !RUN_DAY[day]) {
+    return null;
+  }
+
+  const index = day === 3 ? 0 : day === 6 ? 1 : 2;
+
+  return {
+    week,
+    kind:RUN_DAY[day],
+    detail:RUN_PLAN[week - 1][index],
+    date:dateString
+  };
+}
+
+function activity(dateString) {
+  const day = dateObj(dateString).getDay();
+
+  if(STRENGTH[day]) {
+    return {
+      type:"strength",
+      key:STRENGTH[day]
+    };
+  }
+
+  const run = planInfo(dateString);
+
+  if(run) {
+    return {
+      type:"run",
+      ...run
+    };
+  }
+
+  return {
+    type:"rest"
+  };
+}
+
+function strengthSession(dateString,type) {
+  return DATA.sessions.find(session =>
+    session.date === dateString &&
+    session.workoutType === type
+  );
+}
+
+function runSession(dateString) {
+  return DATA.runSessions.find(session =>
+    session.date === dateString
+  );
+}
+
+function show(viewId) {
+  document.querySelectorAll(".view").forEach(view => {
+    view.classList.toggle("active",view.id === viewId);
+  });
+
+  document.querySelector("#bottom").style.display =
+    viewId === "session" ? "none" : "flex";
+
+  document.querySelectorAll(".nav").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.view === viewId
+    );
+  });
+}
+
+function streak() {
+  let total = 0;
+  const cursor = new Date();
+
+  for(let index = 0; index < 400; index++) {
+    const dateString = localDate(cursor);
+    const currentActivity = activity(dateString);
+
+    const completed =
+      currentActivity.type === "rest" ||
+      (
+        currentActivity.type === "strength" &&
+        strengthSession(dateString,currentActivity.key)
+      ) ||
+      (
+        currentActivity.type === "run" &&
+        runSession(dateString)
+      );
+
+    if(dateString === localDate() && !completed) {
+      cursor.setDate(cursor.getDate() - 1);
+      continue;
     }
-    cursor.setDate(cursor.getDate()-1);
-    if(streak > 400) break;
+
+    if(!completed) {
+      break;
+    }
+
+    total++;
+    cursor.setDate(cursor.getDate() - 1);
   }
-  return streak;
+
+  return total;
 }
 
-/* ================= HOME RENDER ================= */
-function renderHome(){
-  const today = todayStr();
-  const todaysWorkout = workoutForDate(today);
+function renderHome() {
+  const todayString = localDate();
+  const currentActivity = activity(todayString);
 
-  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
-  const isRestDay = todaysWorkout === "rest";
-  document.getElementById("quote").textContent = isRestDay
-    ? REST_QUOTES[dayOfYear % REST_QUOTES.length]
-    : QUOTES[dayOfYear % QUOTES.length];
+  const completed =
+    currentActivity.type === "strength"
+      ? Boolean(strengthSession(todayString,currentActivity.key))
+      : currentActivity.type === "run"
+        ? Boolean(runSession(todayString))
+        : false;
 
-  document.getElementById("streak-val").textContent = computeStreak() + " días";
-  document.getElementById("today-val").textContent = isRestDay ? "Descanso" : ("Workout " + workoutLabel(todaysWorkout));
+  document.querySelector("#quote").textContent =
+    QUOTES[new Date().getDate() % QUOTES.length];
 
-  document.getElementById("startBtn").style.display = isRestDay ? "none" : "block";
-  document.getElementById("restBtn").style.display = isRestDay ? "block" : "none";
+  document.querySelector("#streak").textContent =
+    streak() + " días";
 
-  renderVolumeChart();
-  renderExerciseProgress();
+  document.querySelector("#today").textContent =
+    currentActivity.type === "strength"
+      ? "Workout " + DISPLAY[currentActivity.key]
+      : currentActivity.type === "run"
+        ? (
+          currentActivity.kind === "long"
+            ? "Fondo"
+            : currentActivity.kind === "easy"
+              ? "Run fácil"
+              : "Calidad"
+        )
+        : "Descanso";
+
+  const button = document.querySelector("#todayAction");
+
+  button.textContent =
+    completed
+      ? "Editar sesión de hoy"
+      : currentActivity.type === "rest"
+        ? "Hoy: descanso"
+        : "Empezar sesión de hoy";
+
+  button.disabled = currentActivity.type === "rest";
+
+  button.onclick = () => {
+    if(currentActivity.type === "strength") {
+      openStrength(
+        currentActivity.key,
+        todayString,
+        "home"
+      );
+    }
+
+    if(currentActivity.type === "run") {
+      openRunForm(todayString);
+    }
+  };
+
+  renderVolume();
+  renderProgress();
   renderPRs();
 }
 
-function renderVolumeChart(){
-  // last 6 weeks total volume (sum of weight*reps across all sets, doubled for
-  // two-dumbbell exercises so it reflects the real total load moved)
-  const weeks = [];
-  const now = new Date();
-  for(let i=5;i>=0;i--){
-    const end = new Date(now); end.setDate(now.getDate() - i*7);
-    const start = new Date(end); start.setDate(end.getDate()-6);
-    let vol = 0;
-    DATA.sessions.forEach(s=>{
-      const sd = new Date(s.date+"T00:00:00");
-      if(sd >= start && sd <= end){
-        s.exercises.forEach(ex=>{
-          const multiplier = isSingleImplement(ex.name) ? 1 : 2;
-          ex.sets.forEach(set=>{
-            const w = parseFloat(set.weight)||0;
-            const r = parseFloat(set.reps)||0;
-            vol += w*r*multiplier;
+function renderVolume() {
+  const values = [];
+
+  for(let index = 5; index >= 0; index--) {
+    const end = shift(localDate(),-index * 7);
+    const start = shift(end,-6);
+
+    let volume = 0;
+
+    DATA.sessions.forEach(session => {
+      if(session.date < start || session.date > end) {
+        return;
+      }
+
+      (session.exercises || []).forEach(exercise => {
+        if(exercise.skipped) {
+          return;
+        }
+
+        const multiplier =
+          SINGLE.has(exercise.name) ? 1 : 2;
+
+        (exercise.sets || []).forEach(set => {
+          volume +=
+            (Number(set.weight) || 0) *
+            (Number(set.reps) || 0) *
+            multiplier;
+        });
+      });
+    });
+
+    values.push(Math.round(volume));
+  }
+
+  const maximum = Math.max(1,...values);
+  const labels = ["S-5","S-4","S-3","S-2","S-1","Esta"];
+
+  document.querySelector("#volumeChart").innerHTML =
+    `<div class="bars">${
+      values.map((value,index) => `
+        <div class="barcol">
+          <div class="barval">
+            ${value ? Math.round(value / 100) / 10 + "k" : "0"}
+          </div>
+
+          <div
+            class="bar"
+            style="height:${Math.max(3,value / maximum * 105)}px"
+          ></div>
+
+          <div class="barlabel">${labels[index]}</div>
+        </div>
+      `).join("")
+    }</div>`;
+}
+
+function histories() {
+  const map = {};
+
+  DATA.sessions
+    .slice()
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .forEach(session => {
+      (session.exercises || []).forEach(exercise => {
+        if(exercise.skipped) {
+          return;
+        }
+
+        const multiplier =
+          SINGLE.has(exercise.name) ? 1 : 2;
+
+        const weights = (exercise.sets || []).map(set =>
+          (Number(set.weight) || 0) * multiplier
+        );
+
+        const maximum = Math.max(0,...weights);
+
+        if(maximum) {
+          if(!map[exercise.name]) {
+            map[exercise.name] = [];
+          }
+
+          map[exercise.name].push({
+            date:session.date,
+            max:maximum
           });
-        });
-      }
+        }
+      });
     });
-    weeks.push(Math.round(vol));
-  }
-  const ctx = document.getElementById("volChart");
-  if(window._volChart) window._volChart.destroy();
-  window._volChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["S-5","S-4","S-3","S-2","S-1","Esta"],
-      datasets: [{ data: weeks, backgroundColor: "#7f77dd", borderRadius: 4, maxBarThickness: 26 }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{ grid:{display:false}, ticks:{color:"#98968e", font:{size:11}} },
-        y:{ grid:{color:"#eeeeee"}, ticks:{color:"#98968e", font:{size:10}} }
-      },
-      plugins:{ legend:{display:false} }
-    }
-  });
+
+  return map;
 }
 
-function allExerciseNames(){
-  const set = new Set();
-  Object.values(WORKOUTS).forEach(list => list.forEach(e => set.add(e.name)));
-  return Array.from(set);
-}
+function renderProgress() {
+  const container = document.querySelector("#progress");
+  const history = histories();
+  const items = Object.entries(history).slice(0,5);
 
-function maxWeightHistory(exerciseName){
-  // returns array of {date, maxWeight} sorted by date asc, from sessions containing this exercise.
-  // Uses total load (doubled for two-dumbbell exercises) to match the volume chart and day summary.
-  const points = [];
-  const multiplier = isSingleImplement(exerciseName) ? 1 : 2;
-  DATA.sessions.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(s=>{
-    const ex = s.exercises.find(e=>e.name===exerciseName && !e.skipped);
-    if(ex){
-      const weights = ex.sets.map(st=>(parseFloat(st.weight)||0)*multiplier).filter(w=>w>0);
-      if(weights.length){
-        points.push({date:s.date, max: Math.max(...weights)});
-      }
-    }
-  });
-  return points;
-}
-
-function renderExerciseProgress(){
-  const container = document.getElementById("exerciseProgress");
-  container.innerHTML = "";
-  const names = allExerciseNames();
-  // pick exercises that actually have >=2 data points, show up to 4
-  const withData = names.map(n=>({name:n, hist:maxWeightHistory(n)})).filter(x=>x.hist.length>=1);
-
-  if(withData.length===0){
-    container.innerHTML = '<p class="empty-hint">Todavía no hay datos suficientes. Registrá tu primera sesión para ver el progreso acá.</p>';
+  if(!items.length) {
+    container.innerHTML =
+      '<div class="empty">Registrá una sesión para ver tu progreso.</div>';
     return;
   }
 
-  withData.slice(0,4).forEach((item, i)=>{
-    const hist = item.hist;
-    const first = hist[0].max;
-    const last = hist[hist.length-1].max;
-    const delta = last - first;
-    const deltaStr = hist.length>1 ? (delta>=0? "+":"") + delta.toFixed(1).replace(/\.0$/,"") + "kg" : "primer registro";
+  container.innerHTML = items.map(([name,records]) => {
+    const first = records[0];
+    const last = records[records.length - 1];
+    const difference = last.max - first.max;
 
-    const row = document.createElement("div");
-    row.className = "ex-row";
-    row.innerHTML = `
-      <div>
-        <div class="name">${item.name.split("/")[0].trim()}</div>
-        <div class="delta">${deltaStr}</div>
+    return `
+      <div class="card row">
+        <div>
+          <div class="name">${name.split("/")[0]}</div>
+
+          <div class="sub ok">
+            ${
+              records.length > 1
+                ? (difference >= 0 ? "+" : "") +
+                  difference + " kg"
+                : "Primer registro"
+            }
+          </div>
+        </div>
+
+        <b>${last.max} kg</b>
       </div>
-      <div class="spark"><canvas id="spark${i}"></canvas></div>
     `;
-    container.appendChild(row);
-  });
-
-  withData.slice(0,4).forEach((item, i)=>{
-    const hist = item.hist;
-    const ctx = document.getElementById("spark"+i);
-    if(!ctx) return;
-    new Chart(ctx, {
-      type:"line",
-      data:{
-        labels: hist.map((_,j)=>j),
-        datasets:[{ data: hist.map(h=>h.max), borderColor:"#0f6e56", borderWidth:2, pointRadius:0, tension:0.3, fill:false }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        scales:{ x:{display:false}, y:{display:false} },
-        plugins:{ legend:{display:false}, tooltip:{enabled:false} }
-      }
-    });
-  });
+  }).join("");
 }
 
-function renderPRs(){
-  const container = document.getElementById("prList");
-  container.innerHTML = "";
-  const names = allExerciseNames();
-  const prs = [];
-  names.forEach(name=>{
-    const hist = maxWeightHistory(name);
-    if(hist.length>=2){
-      const last = hist[hist.length-1];
-      const prev = hist[hist.length-2];
-      if(last.max > prev.max){
-        prs.push(`${name.split("/")[0].trim()}: ${prev.max}kg → ${last.max}kg`);
-      }
-    }
-  });
-  if(prs.length===0){
-    container.innerHTML = '<p class="empty-hint">Todavía no hay mejoras registradas. Van a aparecer acá apenas superes una marca anterior.</p>';
-    return;
-  }
-  prs.slice(0,4).forEach(text=>{
-    const div = document.createElement("div");
-    div.className = "pr";
-    div.innerHTML = `<span class="pr-icon">↑</span><span>${text}</span>`;
-    container.appendChild(div);
-  });
-}
+function renderPRs() {
+  const container = document.querySelector("#prs");
+  const history = histories();
+  const records = [];
 
-/* ================= DATE FORMATTING ================= */
-const DAY_NAMES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-const MONTH_NAMES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-
-function formatDateLabel(dateStr){
-  const d = new Date(dateStr + "T00:00:00");
-  return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
-}
-
-/* ================= VIEW SWITCHING ================= */
-function showView(name){
-  document.getElementById("view-home").classList.toggle("active", name==="home");
-  document.getElementById("view-day").classList.toggle("active", name==="day");
-  document.getElementById("view-session").classList.toggle("active", name==="session");
-  document.getElementById("bottomNav").style.display = (name==="session") ? "none" : "flex";
-  document.getElementById("navHomeBtn").classList.toggle("active", name==="home");
-  document.getElementById("navDayBtn").classList.toggle("active", name==="day");
-}
-
-/* ================= DAY VIEW ================= */
-let dayViewDate = null; // set on init / nav click
-
-function getSessionForDate(dateStr, type){
-  return DATA.sessions.find(s => s.date===dateStr && s.workoutType===type) || null;
-}
-
-function renderExerciseRows(container, type, session, isFuture){
-  const exercises = WORKOUTS[type];
-  exercises.forEach((ex, i)=>{
-    const loggedEx = session ? session.exercises.find(e=>e.name===ex.name) : null;
-    const row = document.createElement("div");
-    row.className = "day-ex-row";
-    let summary, loggedClass = "";
-    if(loggedEx && loggedEx.skipped){
-      summary = "No hecho";
-      loggedClass = "skipped";
-    } else if(loggedEx && loggedEx.sets.some(s=>s.weight||s.reps)){
-      const multiplier = isSingleImplement(ex.name) ? 1 : 2;
-      summary = loggedEx.sets.map(s=>{
-        const raw = parseFloat(s.weight);
-        const totalW = isNaN(raw) ? null : raw * multiplier;
-        return `${totalW!==null ? totalW : "-"}kg×${s.reps||"-"}`;
-      }).join(", ");
-      loggedClass = "logged";
-    } else if(isFuture){
-      const equipNote = isSingleImplement(ex.name) ? "" : " (c/u)";
-      summary = `Objetivo: ${ex.sets} sets, ${ex.reps} reps${equipNote}`;
-    } else {
-      summary = "Sin registrar";
-    }
-    row.innerHTML = `<div class="day-ex-name">${i+1}. ${ex.name}</div><div class="day-ex-sets ${loggedClass}">${summary}</div>`;
-    container.appendChild(row);
-  });
-}
-
-function renderDayView(){
-  const dateStr = dayViewDate;
-  const type = workoutForDate(dateStr);
-  const today = todayStr();
-  const isToday = dateStr === today;
-  const isFuture = dateStr > today;
-
-  document.getElementById("day-date-label").innerHTML =
-    formatDateLabel(dateStr) + (isToday ? ' <span class="today-tag">· Hoy</span>' : '');
-  document.getElementById("day-cycle-badge").textContent = WEEKDAY_FULL[weekdayOf(dateStr)];
-
-  const content = document.getElementById("day-content");
-  content.innerHTML = "";
-
-  if(type === "rest"){
-    // días de descanso: si ya hay algo registrado manualmente ese día, se muestra normal;
-    // si no, se ofrece la opción de cargar un Workout A o B igual (por si se corrió un día).
-    const manualSessions = DATA.sessions.filter(s => s.date === dateStr);
-
-    if(manualSessions.length === 0){
-      const card = document.createElement("div");
-      card.className = "rest-card";
-      card.innerHTML = '<div class="rest-icon">💤</div><p>Día de descanso</p>';
-      content.appendChild(card);
-
-      if(!isFuture){
-        const note = document.createElement("p");
-        note.className = "rest-manual-note";
-        note.textContent = "¿Te corriste un entrenamiento a este día? Lo podés registrar igual:";
-        content.appendChild(note);
-
-        ["A","B"].forEach(t=>{
-          const btn = document.createElement("button");
-          btn.className = "cta secondary";
-          btn.style.marginTop = "8px";
-          btn.textContent = "Registrar Workout " + t;
-          btn.addEventListener("click", ()=> openSession(t, dateStr, "day"));
-          content.appendChild(btn);
-        });
-      }
+  Object.entries(history).forEach(([name,values]) => {
+    if(values.length < 2) {
       return;
     }
 
-    manualSessions.forEach(session=>{
-      const title = document.createElement("div");
-      title.className = "day-workout-title";
-      title.textContent = "Workout " + workoutLabel(session.workoutType) + " · registrado en día de descanso";
-      content.appendChild(title);
+    const previous = values[values.length - 2];
+    const current = values[values.length - 1];
 
-      renderExerciseRows(content, session.workoutType, session, isFuture);
+    if(current.max > previous.max) {
+      records.push(
+        `${name.split("/")[0]}: ${previous.max} → ${current.max} kg`
+      );
+    }
+  });
 
-      const editBtn = document.createElement("button");
-      editBtn.className = "cta";
-      editBtn.style.margin = "10px 0 18px";
-      editBtn.textContent = "Editar este día";
-      editBtn.addEventListener("click", ()=> openSession(session.workoutType, dateStr, "day"));
-      content.appendChild(editBtn);
-    });
+  if(!records.length) {
+    container.innerHTML =
+      '<div class="empty">Las nuevas marcas van a aparecer acá.</div>';
     return;
   }
 
-  const session = getSessionForDate(dateStr, type);
+  container.innerHTML = records
+    .slice(0,4)
+    .map(record => `
+      <div class="card row">
+        <span class="ok">↑ ${record}</span>
+      </div>
+    `)
+    .join("");
+}
 
-  const title = document.createElement("div");
-  title.className = "day-workout-title";
-  title.textContent = "Workout " + workoutLabel(type);
-  content.appendChild(title);
+let dayDate = localDate();
 
-  renderExerciseRows(content, type, session, isFuture);
+function renderDay() {
+  const currentActivity = activity(dayDate);
+  const container = document.querySelector("#dayContent");
 
-  if(!isFuture){
-    const btn = document.createElement("button");
-    btn.className = "cta";
-    btn.style.marginTop = "18px";
-    btn.textContent = session ? "Editar este día" : "Registrar este día";
-    btn.addEventListener("click", ()=> openSession(type, dateStr, "day"));
-    content.appendChild(btn);
+  document.querySelector("#dayLabel").textContent =
+    fmt(dayDate) +
+    (dayDate === localDate() ? " · Hoy" : "");
+
+  document.querySelector("#dayBadge").textContent =
+    DAYS[dateObj(dayDate).getDay()];
+
+  if(currentActivity.type === "rest") {
+    container.innerHTML =
+      '<div class="card rest">💤<br><br>Día de descanso</div>';
+    return;
   }
-}
 
-function shiftDay(delta){
-  const d = new Date(dayViewDate + "T00:00:00");
-  d.setDate(d.getDate() + delta);
-  dayViewDate = toLocalDateStr(d);
-  renderDayView();
-}
+  if(currentActivity.type === "run") {
+    const log = runSession(dayDate);
 
-/* ================= SESSION VIEW ================= */
-let currentSessionType = null;
-let currentSessionDate = null;
-let sessionReturnView = "home";
+    container.innerHTML = `
+      <div class="run-card">
+        <div class="run-top">
+          <div>
+            <div class="run-title">
+              Semana ${currentActivity.week} ·
+              ${
+                currentActivity.kind === "quality"
+                  ? "Calidad"
+                  : currentActivity.kind === "long"
+                    ? "Fondo"
+                    : "Fácil"
+              }
+            </div>
 
-function openSession(type, dateStr, returnTo){
-  currentSessionType = type;
-  currentSessionDate = dateStr || todayStr();
-  sessionReturnView = returnTo || "home";
+            <div class="run-detail">
+              ${currentActivity.detail}
+            </div>
+          </div>
 
-  showView("session");
-  document.getElementById("session-title").textContent = "Workout " + workoutLabel(type);
-  const isToday = currentSessionDate === todayStr();
-  document.getElementById("session-date-label").innerHTML =
-    formatDateLabel(currentSessionDate) + (isToday ? ' <span style="color:var(--accent)">· Hoy</span>' : "");
-  document.getElementById("session-day-badge").textContent = WEEKDAY_FULL[weekdayOf(currentSessionDate)];
-  document.getElementById("sessionNextBtn").style.opacity = isToday ? "0.35" : "1";
-  document.getElementById("sessionNextBtn").style.pointerEvents = isToday ? "none" : "auto";
+          ${log ? '<span class="done">Completado</span>' : ""}
+        </div>
 
-  const container = document.getElementById("session-exercises");
-  container.innerHTML = "";
+        ${
+          log
+            ? `
+              <div class="sub ok" style="margin-top:8px">
+                ${log.km || 0} km ·
+                ${log.time || "sin tiempo"} ·
+                RPE ${log.rpe || "—"}
+              </div>
+            `
+            : ""
+        }
+      </div>
 
-  const existingSession = getSessionForDate(currentSessionDate, type);
-  const exercises = WORKOUTS[type];
+      <button
+        class="btn run"
+        onclick="openRunForm('${dayDate}')"
+      >
+        ${log ? "Editar" : "Registrar"} corrida
+      </button>
+    `;
 
-  exercises.forEach((ex, idxEx)=>{
-    const lastSets = getLastLoggedSets(ex.name, currentSessionDate);
-    const existingEx = existingSession ? existingSession.exercises.find(e=>e.name===ex.name) : null;
-    const isSkipped = !!(existingEx && existingEx.skipped);
-    const unitLabel = weightUnitLabel(ex.name);
-    const card = document.createElement("div");
-    card.className = "ex-card" + (isSkipped ? " skipped" : "");
-    let setsHtml = "";
-    for(let s=0; s<ex.sets; s++){
-      const prevW = lastSets[s] ? lastSets[s].weight : "";
-      const prevR = lastSets[s] ? lastSets[s].reps : "";
-      const curW = existingEx && existingEx.sets[s] ? existingEx.sets[s].weight : "";
-      const curR = existingEx && existingEx.sets[s] ? existingEx.sets[s].reps : "";
-      setsHtml += `
-        <div class="set-row">
-          <span class="set-num">${s+1}</span>
-          <input type="number" inputmode="decimal" placeholder="${prevW || 'kg'}" value="${curW}" data-ex="${idxEx}" data-set="${s}" data-field="weight" min="0" step="0.5" ${isSkipped ? "disabled" : ""}>
-          <input type="number" inputmode="numeric" placeholder="${prevR || 'reps'}" value="${curR}" data-ex="${idxEx}" data-set="${s}" data-field="reps" min="0" step="1" ${isSkipped ? "disabled" : ""}>
-          <span class="unit">${unitLabel}</span>
+    return;
+  }
+
+  const session = strengthSession(
+    dayDate,
+    currentActivity.key
+  );
+
+  const exerciseRows = WORKOUTS[currentActivity.key]
+    .map(exercise => {
+      const loggedExercise =
+        session &&
+        session.exercises.find(item =>
+          item.name === exercise.name
+        );
+
+      let detail =
+        `Objetivo: ${exercise.sets} × ${exercise.reps}`;
+
+      if(loggedExercise) {
+        detail = loggedExercise.skipped
+          ? "No hecho"
+          : loggedExercise.sets
+              .map(set =>
+                `${set.weight || "-"}kg×${set.reps || "-"}`
+              )
+              .join(", ");
+      }
+
+      return `
+        <div class="card row">
+          <div>
+            <div class="name">${exercise.name}</div>
+
+            <div class="sub ${loggedExercise && !loggedExercise.skipped ? "ok" : ""}">
+              ${detail}
+            </div>
+          </div>
         </div>
       `;
-    }
-    const lastNote = lastSets.length
-      ? `Última vez: ${lastSets.map(s=>`${s.weight||"-"}kg×${s.reps||"-"}`).join(", ")}`
-      : "Todavía no registrado antes";
-    const equipNote = isSingleImplement(ex.name) ? "" : " · peso por mancuerna";
-    card.innerHTML = `
-      <div class="ex-card-header">
-        <div class="ex-title">${idxEx+1}. ${ex.name}</div>
-        <label class="skip-toggle">
-          <input type="checkbox" class="skip-checkbox" data-ex="${idxEx}" ${isSkipped ? "checked" : ""}>
-          No hecho
-        </label>
-      </div>
-      <div class="ex-target">Objetivo: ${ex.sets} sets, ${ex.reps} reps${equipNote}</div>
-      <div class="sets-wrap" id="sets-wrap-${idxEx}">${setsHtml}</div>
-      <div class="last-time">${lastNote}</div>
-    `;
-    container.appendChild(card);
-  });
+    })
+    .join("");
 
-  container.querySelectorAll(".skip-checkbox").forEach(cb=>{
-    cb.addEventListener("change", (e)=>{
-      const idxEx = e.target.dataset.ex;
-      const card = e.target.closest(".ex-card");
-      const inputs = card.querySelectorAll(`#sets-wrap-${idxEx} input`);
-      inputs.forEach(inp => inp.disabled = e.target.checked);
-      card.classList.toggle("skipped", e.target.checked);
+  container.innerHTML = `
+    <div class="name" style="margin-bottom:10px">
+      Workout ${DISPLAY[currentActivity.key]}
+    </div>
+
+    ${exerciseRows}
+
+    <button
+      class="btn"
+      onclick="openStrength(
+        '${currentActivity.key}',
+        '${dayDate}',
+        'days'
+      )"
+    >
+      ${session ? "Editar" : "Registrar"} sesión
+    </button>
+  `;
+}
+
+function shiftDay(days) {
+  dayDate = shift(dayDate,days);
+  renderDay();
+}
+
+let currentSession = {};
+
+function openStrength(type,dateString,returnView) {
+  currentSession = {
+    type,
+    date:dateString,
+    returnView
+  };
+
+  show("session");
+
+  document.querySelector("#sessionTitle").textContent =
+    "Workout " + DISPLAY[type];
+
+  document.querySelector("#sessionDate").textContent =
+    fmt(dateString);
+
+  const existingSession =
+    strengthSession(dateString,type);
+
+  const container =
+    document.querySelector("#exerciseList");
+
+  container.innerHTML = WORKOUTS[type]
+    .map((exercise,index) => {
+      const previousExercise = DATA.sessions
+        .filter(session => session.date < dateString)
+        .sort((a,b) => b.date.localeCompare(a.date))
+        .map(session =>
+          (session.exercises || []).find(item =>
+            item.name === exercise.name &&
+            !item.skipped
+          )
+        )
+        .find(Boolean);
+
+      const currentExercise =
+        existingSession &&
+        existingSession.exercises.find(item =>
+          item.name === exercise.name
+        );
+
+      const skipped =
+        currentExercise && currentExercise.skipped;
+
+      const sets = Array
+        .from({length:exercise.sets},(_,setIndex) => {
+          const previousSet =
+            previousExercise &&
+            previousExercise.sets[setIndex];
+
+          const currentSet =
+            currentExercise &&
+            currentExercise.sets[setIndex];
+
+          return `
+            <div class="set">
+              <span>${setIndex + 1}</span>
+
+              <input
+                type="number"
+                step="0.5"
+                class="w"
+                placeholder="${previousSet?.weight || "kg"}"
+                value="${currentSet?.weight || ""}"
+                ${skipped ? "disabled" : ""}
+              >
+
+              <input
+                type="number"
+                class="r"
+                placeholder="${previousSet?.reps || "reps"}"
+                value="${currentSet?.reps || ""}"
+                ${skipped ? "disabled" : ""}
+              >
+            </div>
+          `;
+        })
+        .join("");
+
+      return `
+        <div
+          class="exercise ${skipped ? "skipped" : ""}"
+          data-i="${index}"
+        >
+          <div class="ex-head">
+            <b>${index + 1}. ${exercise.name}</b>
+
+            <label class="skip">
+              <input
+                type="checkbox"
+                class="skipbox"
+                ${skipped ? "checked" : ""}
+              >
+              No hecho
+            </label>
+          </div>
+
+          <div class="target">
+            ${exercise.sets} sets ·
+            ${exercise.reps} reps
+            ${SINGLE.has(exercise.name) ? "" : " · peso por mancuerna"}
+          </div>
+
+          ${sets}
+        </div>
+      `;
+    })
+    .join("");
+
+  container.querySelectorAll(".skipbox").forEach(checkbox => {
+    checkbox.addEventListener("change",() => {
+      const card = checkbox.closest(".exercise");
+
+      card.classList.toggle(
+        "skipped",
+        checkbox.checked
+      );
+
+      card
+        .querySelectorAll("input.w,input.r")
+        .forEach(input => {
+          input.disabled = checkbox.checked;
+        });
     });
   });
 }
 
-function getLastLoggedSets(exerciseName, beforeDate){
-  const past = DATA.sessions.filter(s => s.date < beforeDate && s.exercises.some(e=>e.name===exerciseName && !e.skipped));
-  if(past.length===0) return [];
-  past.sort((a,b)=> b.date.localeCompare(a.date));
-  const ex = past[0].exercises.find(e=>e.name===exerciseName && !e.skipped);
-  return ex ? ex.sets : [];
-}
+function saveStrength() {
+  const exercises =
+    WORKOUTS[currentSession.type].map((exercise,index) => {
+      const card = document.querySelector(
+        `.exercise[data-i="${index}"]`
+      );
 
-function shiftSessionDay(delta){
-  const today = todayStr();
-  let d = new Date(currentSessionDate + "T00:00:00");
-  let newDateStr = currentSessionDate;
-  let type = "rest";
-  for(let i=0; i<30; i++){
-    d.setDate(d.getDate() + delta);
-    newDateStr = toLocalDateStr(d);
-    if(delta > 0 && newDateStr > today) return; // no navegar al futuro
-    type = workoutForDate(newDateStr);
-    if(type !== "rest") break;
-  }
-  if(type === "rest") return; // no se encontró día de entrenamiento en el rango
-  openSession(type, newDateStr, sessionReturnView);
-}
+      const skipped =
+        card.querySelector(".skipbox").checked;
 
-function saveSession(){
-  const type = currentSessionType;
-  const date = currentSessionDate;
-  const exercises = WORKOUTS[type];
-  const inputs = document.querySelectorAll("#session-exercises input[data-field]");
-  const structured = exercises.map((ex, idx)=>({ name: ex.name, skipped: false, sets: Array.from({length:ex.sets}, ()=>({weight:"",reps:""})) }));
+      const sets = [...card.querySelectorAll(".set")]
+        .map(row => ({
+          weight:skipped
+            ? ""
+            : row.querySelector(".w").value,
 
-  inputs.forEach(inp=>{
-    const exIdx = parseInt(inp.dataset.ex);
-    const setIdx = parseInt(inp.dataset.set);
-    const field = inp.dataset.field;
-    if(inp.value !== ""){
-      structured[exIdx].sets[setIdx][field] = inp.value;
-    }
-  });
+          reps:skipped
+            ? ""
+            : row.querySelector(".r").value
+        }));
 
-  document.querySelectorAll("#session-exercises .skip-checkbox").forEach(cb=>{
-    const exIdx = parseInt(cb.dataset.ex);
-    if(cb.checked){
-      structured[exIdx].skipped = true;
-      structured[exIdx].sets = structured[exIdx].sets.map(()=>({weight:"",reps:""}));
-    }
-  });
+      return {
+        name:exercise.name,
+        skipped,
+        sets
+      };
+    });
 
-  const hasAnyData = structured.some(ex => ex.skipped || ex.sets.some(s => s.weight !== "" || s.reps !== ""));
-  if(!hasAnyData){
-    showToast("Cargá al menos un set, o marcá algún ejercicio como no hecho");
+  const hasData = exercises.some(exercise =>
+    exercise.skipped ||
+    exercise.sets.some(set =>
+      set.weight || set.reps
+    )
+  );
+
+  if(!hasData) {
+    toast("Cargá al menos un set");
     return;
   }
 
-  // remove existing session of same type/date to avoid duplicates
-  DATA.sessions = DATA.sessions.filter(s => !(s.date===date && s.workoutType===type));
-  DATA.sessions.push({ date, workoutType: type, exercises: structured });
-  saveData(DATA);
+  DATA.sessions = DATA.sessions.filter(session =>
+    !(
+      session.date === currentSession.date &&
+      session.workoutType === currentSession.type
+    )
+  );
 
-  showToast("Sesión guardada");
-  setTimeout(()=>{
-    returnFromSession();
-  }, 700);
+  DATA.sessions.push({
+    date:currentSession.date,
+    workoutType:currentSession.type,
+    exercises
+  });
+
+  save();
+  toast("Sesión guardada");
+
+  setTimeout(() => {
+    show(currentSession.returnView);
+
+    if(currentSession.returnView === "days") {
+      renderDay();
+    } else {
+      renderHome();
+    }
+  },500);
 }
 
-function returnFromSession(){
-  if(sessionReturnView === "day"){
-    showView("day");
-    renderDayView();
-  } else {
-    showView("home");
-    renderHome();
+let selectedWeek = 1;
+
+function currentWeek() {
+  const difference =
+    dateObj(localDate()) -
+    dateObj(DATA.runPlanStart);
+
+  return Math.max(
+    1,
+    Math.min(
+      18,
+      Math.floor(difference / 604800000) + 1
+    )
+  );
+}
+
+function weekDate(week,offset) {
+  return shift(
+    DATA.runPlanStart,
+    (week - 1) * 7 + offset
+  );
+}
+
+function runStats() {
+  const completed = DATA.runSessions.length;
+
+  const total = DATA.runSessions.reduce(
+    (sum,session) =>
+      sum + (Number(session.km) || 0),
+    0
+  );
+
+  const longest = Math.max(
+    0,
+    ...DATA.runSessions.map(session =>
+      Number(session.km) || 0
+    )
+  );
+
+  return {
+    completed,
+    total,
+    longest
+  };
+}
+
+function renderRunning() {
+  document.querySelector("#planStart").value =
+    DATA.runPlanStart;
+
+  const current = currentWeek();
+  const stats = runStats();
+
+  document.querySelector("#runWeekHero").textContent =
+    "Semana " + current;
+
+  document.querySelector("#runHeroStats").textContent =
+    `${stats.completed} sesiones · ` +
+    `${stats.total.toFixed(1)} km · ` +
+    `fondo máximo ${stats.longest} km`;
+
+  document.querySelector("#weekTitle").textContent =
+    `Semana ${selectedWeek} de 18`;
+
+  const sessions = [
+    {
+      offset:2,
+      title:"Calidad",
+      detail:RUN_PLAN[selectedWeek - 1][0]
+    },
+    {
+      offset:5,
+      title:"Fondo",
+      detail:RUN_PLAN[selectedWeek - 1][1]
+    },
+    {
+      offset:6,
+      title:selectedWeek === 18
+        ? "Carrera"
+        : "Fácil",
+      detail:RUN_PLAN[selectedWeek - 1][2]
+    }
+  ];
+
+  document.querySelector("#runSessions").innerHTML =
+    sessions.map(session => {
+      const dateString =
+        weekDate(selectedWeek,session.offset);
+
+      const log =
+        runSession(dateString);
+
+      return `
+        <div class="run-card">
+          <div class="run-top">
+            <div>
+              <div class="run-title">
+                ${fmt(dateString)} · ${session.title}
+              </div>
+
+              <div class="run-detail">
+                ${session.detail}
+              </div>
+            </div>
+
+            ${
+              log
+                ? '<span class="done">Completado</span>'
+                : ""
+            }
+          </div>
+
+          ${
+            log
+              ? `
+                <div class="sub ok" style="margin-top:8px">
+                  ${log.km || 0} km ·
+                  ${log.time || "sin tiempo"} ·
+                  RPE ${log.rpe || "—"}
+                </div>
+              `
+              : ""
+          }
+
+          <button
+            class="btn small run"
+            style="margin-top:10px"
+            onclick="openRunForm('${dateString}')"
+          >
+            ${log ? "Editar" : "Registrar"}
+          </button>
+
+          <div id="form-${dateString}"></div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function openRunForm(dateString) {
+  show("running");
+
+  const info = planInfo(dateString);
+
+  selectedWeek =
+    info ? info.week : currentWeek();
+
+  renderRunning();
+
+  const host = document.querySelector(
+    `#form-${dateString}`
+  );
+
+  if(!host) {
+    return;
   }
+
+  const existing =
+    runSession(dateString) || {};
+
+  host.innerHTML = `
+    <div class="run-form">
+      <div class="form-grid">
+        <label>
+          Distancia real (km)
+
+          <input
+            id="runKm"
+            class="field"
+            type="number"
+            step="0.01"
+            value="${existing.km || ""}"
+          >
+        </label>
+
+        <label>
+          Tiempo
+
+          <input
+            id="runTime"
+            class="field"
+            placeholder="01:10:00"
+            value="${existing.time || ""}"
+          >
+        </label>
+
+        <label>
+          RPE (1-10)
+
+          <input
+            id="runRpe"
+            class="field"
+            type="number"
+            min="1"
+            max="10"
+            value="${existing.rpe || ""}"
+          >
+        </label>
+
+        <label>
+          Ritmo medio
+
+          <input
+            id="runPace"
+            class="field"
+            placeholder="7:00/km"
+            value="${existing.pace || ""}"
+          >
+        </label>
+      </div>
+
+      <label class="full-label">
+        Notas
+
+        <textarea
+          id="runNotes"
+          class="field"
+        >${existing.notes || ""}</textarea>
+      </label>
+
+      <button
+        class="btn run"
+        onclick="saveRun('${dateString}')"
+      >
+        Guardar corrida
+      </button>
+
+      ${
+        existing.date
+          ? `
+            <button
+              class="muted-btn"
+              onclick="deleteRun('${dateString}')"
+            >
+              Eliminar registro
+            </button>
+          `
+          : ""
+      }
+    </div>
+  `;
+
+  host.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
 }
 
-function showToast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(()=> t.classList.remove("show"), 1800);
+function saveRun(dateString) {
+  const item = {
+    date:dateString,
+    km:document.querySelector("#runKm").value,
+    time:document.querySelector("#runTime").value,
+    rpe:document.querySelector("#runRpe").value,
+    pace:document.querySelector("#runPace").value,
+    notes:document.querySelector("#runNotes").value
+  };
+
+  if(!item.km && !item.time) {
+    toast("Ingresá distancia o tiempo");
+    return;
+  }
+
+  DATA.runSessions = DATA.runSessions.filter(session =>
+    session.date !== dateString
+  );
+
+  DATA.runSessions.push(item);
+
+  save();
+  toast("Corrida guardada");
+  renderRunning();
 }
 
-/* ================= EVENTS ================= */
-document.getElementById("startBtn").addEventListener("click", ()=>{
-  const type = workoutForDate(todayStr());
-  if(type !== "rest") openSession(type, todayStr(), "home");
+function deleteRun(dateString) {
+  if(!confirm("¿Eliminar esta corrida?")) {
+    return;
+  }
+
+  DATA.runSessions = DATA.runSessions.filter(session =>
+    session.date !== dateString
+  );
+
+  save();
+  renderRunning();
+}
+
+document.querySelectorAll(".nav").forEach(button => {
+  button.addEventListener("click",() => {
+    const view = button.dataset.view;
+
+    show(view);
+
+    if(view === "home") {
+      renderHome();
+    }
+
+    if(view === "days") {
+      dayDate = localDate();
+      renderDay();
+    }
+
+    if(view === "running") {
+      selectedWeek = currentWeek();
+      renderRunning();
+    }
+  });
 });
-document.getElementById("restBtn").addEventListener("click", ()=>{
-  showToast("Hoy es día de descanso 💤");
-});
-document.getElementById("resetDataBtn").addEventListener("click", ()=>{
-  const ok = confirm("¿Borrar todos los datos guardados? Esta acción no se puede deshacer.");
-  if(ok){
-    localStorage.removeItem(STORE_KEY);
+
+document.querySelector("#prevDay").addEventListener(
+  "click",
+  () => shiftDay(-1)
+);
+
+document.querySelector("#nextDay").addEventListener(
+  "click",
+  () => shiftDay(1)
+);
+
+document.querySelector("#back").addEventListener(
+  "click",
+  () => {
+    show(currentSession.returnView);
+
+    if(currentSession.returnView === "days") {
+      renderDay();
+    } else {
+      renderHome();
+    }
+  }
+);
+
+document.querySelector("#saveStrength").addEventListener(
+  "click",
+  saveStrength
+);
+
+document.querySelector("#prevWeek").addEventListener(
+  "click",
+  () => {
+    selectedWeek = Math.max(1,selectedWeek - 1);
+    renderRunning();
+  }
+);
+
+document.querySelector("#nextWeek").addEventListener(
+  "click",
+  () => {
+    selectedWeek = Math.min(18,selectedWeek + 1);
+    renderRunning();
+  }
+);
+
+document.querySelector("#saveStart").addEventListener(
+  "click",
+  () => {
+    const value =
+      document.querySelector("#planStart").value;
+
+    if(!value) {
+      return;
+    }
+
+    DATA.runPlanStart = mondayOf(value);
+
+    save();
+
+    selectedWeek = currentWeek();
+
+    toast("Inicio del plan actualizado");
+    renderRunning();
+  }
+);
+
+document.querySelector("#reset").addEventListener(
+  "click",
+  () => {
+    const confirmed = confirm(
+      "¿Borrar todos los datos de pesas y running?"
+    );
+
+    if(!confirmed) {
+      return;
+    }
+
+    storageRemove();
     location.reload();
   }
-});
-document.getElementById("backBtn").addEventListener("click", returnFromSession);
-document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
-document.getElementById("sessionPrevBtn").addEventListener("click", ()=> shiftSessionDay(-1));
-document.getElementById("sessionNextBtn").addEventListener("click", ()=> shiftSessionDay(1));
+);
 
-document.getElementById("navHomeBtn").addEventListener("click", ()=>{
-  showView("home");
-  renderHome();
-});
-document.getElementById("navDayBtn").addEventListener("click", ()=>{
-  dayViewDate = todayStr();
-  showView("day");
-  renderDayView();
-});
-document.getElementById("prevDayBtn").addEventListener("click", ()=> shiftDay(-1));
-document.getElementById("nextDayBtn").addEventListener("click", ()=> shiftDay(1));
-
-/* ================= INIT ================= */
-dayViewDate = todayStr();
 renderHome();
 </script>
+
 </body>
 </html>
